@@ -1,30 +1,35 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
+import datetime
 import itertools
 import os
 from model import dr, Doc
 
+class StreamError(Exception): pass
+
 class Stream(object):
+    """ A directory containing docrep files. Documents should be yieldable in temporal order.
+    * Filenames should be sortable for temporal order.
+    * Document order within files should be temporal.
+    """
     def __init__(self, dirname):
         self.dirname = dirname
+
+    def __str__(self):
+        return self.dirname
 
     def __iter__(self):
         """ Yields tuples of (day, docs).
         Checks that day increases monotonically.
         """
+        last_date = None
         for fname in sorted(os.listdir(self.dirname)):
             with open(os.path.join(self.dirname, fname), 'rb') as f:
-                print(f)
                 for date, docs in itertools.groupby(dr.Reader(f, Doc), lambda d: d.date_str):
-                    yield date, list(docs)
-                    # TODO: date check.
+                    if last_date and date < last_date:
+                        raise StreamError('Dates should increase in streams: current date {}, seen {}'.format(date, last_date))
+                    yield self.parse_date(date), list(docs)
+                    last_date = date
 
-class StreamCollection(object):
-    def __init__(self, primary, streams):
-        assert not primary in streams
-        self.primary = primary
-        self.streams = streams
-
-    def iter_window(self, window):
-        """ Iterates through the primary stream, yielding documents from it and other streams within the window. """
-        raise NotImplementedError
+    def parse_date(self, date):
+        return datetime.datetime.strptime(date, '%Y%m%d').date()

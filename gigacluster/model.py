@@ -68,6 +68,9 @@ class Sentence(dr.Ann):
                 break
             yield s
 
+    def __str__(self):
+        return self.text
+
 class Headline(dr.Ann):
     span = dr.Slice(Sentence)
 
