@@ -80,6 +80,15 @@ class Dateline(dr.Ann):
 class Paragraph(dr.Ann):
     span = dr.Slice(Sentence)
 
+def parse_doc_id(doc_id):
+    source, lang, date = doc_id.split('_')
+    date, sequence = date.split('.')
+    return source, lang, date, sequence
+
+def doc_id_to_basename(doc_id):
+    source, lang, date, sequence = parse_doc_id(doc_id)
+    return '{}_{}_{}'.format(source.lower(), lang.lower(), date[:6])
+
 class Doc(dr.Doc):
     id = dr.Text()
     type = dr.Text()
@@ -95,4 +104,4 @@ class Doc(dr.Doc):
 
     @property
     def date_str(self):
-        return self.id.split('_')[2][:8]
+        return parse_doc_id(self.doc_id)[2]
