@@ -104,4 +104,4 @@ class Doc(dr.Doc):
 
     @property
     def date_str(self):
-        return parse_doc_id(self.doc_id)[2]
+        return parse_doc_id(self.id)[2]

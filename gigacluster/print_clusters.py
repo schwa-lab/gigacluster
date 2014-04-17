@@ -8,12 +8,12 @@ from window import Window
 from comparators import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument('primary')
-parser.add_argument('streams')
+parser.add_argument('-p', '--primary')
+parser.add_argument('-s', '--streams', default=[], action='append')
 args = parser.parse_args()
 
 primary = Window(Stream(args.primary))
-secondaries = [Window(Stream(args.streams), before=1, after=1)]
+secondaries = [Window(Stream(i), before=1, after=1) for i in args.streams]
 
 comparator = NEOverlap(threshold=0.1)
 
