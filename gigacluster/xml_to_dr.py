@@ -83,7 +83,7 @@ def extract_docs(fname, tokenizer):
             text, start_text_offset = _text.group(2), start_content_offset + _text.start(2)
         else:
             text, start_text_offset = b"", 0
-        doc = Doc(id=str(id), type=str(type))
+        doc = Doc(id=id.decode(), type=type.decode())
         tokenizer.tokenize(headline, doc, start_headline_offset, is_headline=True)
         tokenizer.tokenize(dateline, doc, start_dateline_offset, is_dateline=True)
 
