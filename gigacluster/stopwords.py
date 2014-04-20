@@ -143,17 +143,30 @@ sunday
 '''
 MONTHS = '''
 january
+jan.
 february
+feb.
 march
+mar.
 april
+apr.
 may
+may.
 june
+jun.
 july
+jul.
 august
+aug.
 september
+sept.
+sep.
 october
+oct.
 november
+nov.
 december
+dec.
 '''
 STOPWORDS.update({i for i in DAYS.strip().split()})
 STOPWORDS.update({i for i in MONTHS.strip().split()})

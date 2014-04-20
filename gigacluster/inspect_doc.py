@@ -6,8 +6,10 @@ from model import dr, Doc, parse_doc_id, doc_id_to_basename
 
 def dr_to_string(doc):
     lines = [20*'#' + doc.id + 20*'#']
-    lines.append(' '.join(t.raw for t in doc.tokens[doc.headline.span]))
-    lines.append(' '.join(t.raw for t in doc.tokens[doc.dateline.span]))
+    if doc.headline:
+        lines.append(' '.join(t.raw for t in doc.tokens[doc.headline.span]))
+    if doc.dateline:
+        lines.append(' '.join(t.raw for t in doc.tokens[doc.dateline.span]))
     for s in doc.sentences:
         lines.append(' '.join(t.raw for t in doc.tokens[s.span]))
     return '\n'.join(lines) + '\n\n'
