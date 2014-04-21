@@ -14,6 +14,7 @@ def decorate(doc):
     return doc
 
 class Token(dr.Ann):
+    __slots__ = ['raw', 'norm', 'span', 'before', 'after']
     raw = dr.Text(help="Raw string")
     norm = dr.Text(help="Normalised string")
     # pos = dr.Field(help='POS tag')
@@ -46,6 +47,7 @@ class Token(dr.Ann):
         return cmp(self.index, other.index)
 
 class Sentence(dr.Ann):
+    __slots__ = ['span', 'prev', 'next', 'index']
     span = dr.Slice(Token)
 
     @property
@@ -72,12 +74,15 @@ class Sentence(dr.Ann):
         return self.text
 
 class Headline(dr.Ann):
+    __slots__ = ['span']
     span = dr.Slice(Sentence)
 
 class Dateline(dr.Ann):
+    __slots__ = ['span']
     span = dr.Slice(Sentence)
 
 class Paragraph(dr.Ann):
+    __slots__ = ['span']
     span = dr.Slice(Sentence)
 
 def parse_doc_id(doc_id):
@@ -90,6 +95,7 @@ def doc_id_to_basename(doc_id):
     return '{}_{}_{}'.format(source.lower(), lang.lower(), date[:6])
 
 class Doc(dr.Doc):
+    __slots__ = ['id', 'type', 'headline', 'dateline', 'tokens', 'sentences', 'paras', 'features']
     id = dr.Text()
     type = dr.Text()
     headline = dr.Pointer(Sentence) # TODO turn into paragraph
