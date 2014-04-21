@@ -8,9 +8,18 @@ from stream import Stream
 from window import Window
 from comparators import *
 
+METRICS = {
+    'SentenceBOWOverlap': SentenceBOWOverlap,
+    'SentenceBOWCosine': SentenceBOWCosine,
+}
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--primary')
 parser.add_argument('-s', '--streams', default=[], action='append')
+parser.add_argument('-m', '--metric', default='SentenceBOWOverlap', help='Metric, available={}'.format(METRICS.keys()))
+parser.add_argument('-t', '--threshold', type=float, default=0.25)
+parser.add_argument('-l', '--length', type=int, default=1)
+parser.add_argument('-i', '--idf-path')
 parser.add_argument('-e', '--end-date')
 args = parser.parse_args()
 
@@ -22,8 +31,12 @@ else:
 primary = Window(Stream(args.primary))
 secondaries = [Window(Stream(i), before=1, after=1) for i in args.streams]
 
-#comparator = BOWOverlap(threshold=0.1)
-comparator = SentenceBOWOverlap(threshold=0.3, length=6)
+m = METRICS.get(args.metric)
+if m is None:
+    parser.error('Require valid metric {}'.format(METRICS.keys()))
+comparator = m(args.threshold, length=args.length, idf_path=args.idf_path)
+
+print(comparator, file=sys.stderr)
 
 more = primary.seek()
 while more:

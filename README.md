@@ -23,8 +23,8 @@ Schwalab servers
 CC=gcc CXX=g++ ve/bin/python3.4 -m pip install -e ../libschwa-python
 ```
 
-Use
-===
+Data Preparation
+================
 
 Converting gigaword to docrep - 5h, 20m across 8 processors:
 ```bash
@@ -49,9 +49,28 @@ data/
     └── xin_eng_201001.dr
 ```
 
-Clustering a month across all streams in 11m:
+Building an IDF model:
 ```bash
-time ./gigacluster/print_clusters.py -p data/nyt/ -s data/apw/ \
-  -s data/afp/ -s data/cna/ \
-  -s data/wpb/ -s data/xin/ > clusters.txt
+find data/ -iname '*dr' | parallel ./gigacluster/print_df_tokens.py {} ">" {.}.df
+cat data/*/*dr | dr-count > data/n
+cat data/*/*df | ./gigacluster/build_idf_model.py -n $(cat data/n) > data/idf.txt
 ```
+
+Clustering
+==========
+
+Clustering a month across all streams:
+```bash
+time ./gigacluster/print_clusters.py \
+  -t 0.4 -m SentenceBOWOverlap -l 10
+  -p data/nyt/ -s data/apw/ \
+  -s data/afp/ -s data/cna/ \
+  -s data/wpb/ -s data/xin/
+```
+
+This takes sentences:
+* without stopwords
+* with more than 10 tokens
+* which overlap at more than 0.4
+
+There are also options to weight by IDF.

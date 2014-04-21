@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import math
 import re
 import string
 from stopwords import STOPWORDS
 
+from idf import IDF
 from model import dr, prev_next_sentences
 
 class Match(object):
@@ -22,6 +24,19 @@ def overlap(a, b):
         return len(a.intersection(b)) / u
     else:
         return 0
+
+def cosine_similarity(a, b):
+    """
+    Compute the cosine similarity of two vectors, represented as dicts.
+    Equation described here: http://www.miislita.com/information-retrieval-tutorial/cosine-similarity-tutorial.html#Cosim
+    """
+    if not a or not b:
+        return 0.0
+    return sum(a[t] * b[t] for t in set(a).intersection(b)) / (norm(a) * norm(b))
+
+def norm(a):
+    """ The Euclidean norm. """
+    return math.sqrt(float(sum(v * v for v in a.values())))
 
 class Comparator(object):
     def __init__(self, threshold):
@@ -49,52 +64,6 @@ class OverlapComparator(Comparator):
         else:
             return []
 
-class BOWOverlap(OverlapComparator):
-    def prime_features(self, doc):
-        if not hasattr(doc, 'features'):
-            setattr(doc, 'features', set(i for i in set(t.raw.lower() for t in doc.tokens) if not i in STOPWORDS))
-
-class NEOverlap(OverlapComparator):
-    def prime_features(self, doc):
-        if not hasattr(doc, 'features'):
-            doc.features = set()
-            # Get uppers from other parts of the sentence.
-            self.uppers = set()
-            for s in doc.sentences:
-                for t in doc.tokens[s.span][1:]:
-                    if t.raw[0].isupper():
-                        self.uppers.add(t.raw)
-            for sentence in doc.sentences:
-                mentions = list(self.iter_sentence_mentions(doc, sentence))
-                if mentions:
-                    self.add_features(doc, sentence, mentions)
-
-    def iter_sentence_mentions(self, doc, sentence):
-        m = []
-        for i, t in enumerate(doc.tokens[sentence.span]):
-            is_mention = self.is_mention(t.raw)
-            if i == 0 and is_mention and t.raw in self.uppers:
-                m.append(t.raw)
-            elif i > 0 and is_mention:
-                m.append(t.raw)
-            elif t.raw == "'s" and m:
-                m.append(t.raw)
-            elif m:
-                yield ' '.join(m)
-                m = []
-        if m:
-            yield ' '.join(m)
-
-    def is_mention(self, text):
-        # FIXME No acronyms.
-        if text[0].isupper() and text[1:].islower() and not text.lower() in STOPWORDS:
-            return True
-        else:
-            return False
-
-    def add_features(self, doc, sentence, mentions):
-        doc.features.update(set(mentions))
-
 EXP = re.compile('[{}]+'.format(string.punctuation))
 def is_punctuation(t):
     return EXP.match(t)
@@ -107,9 +76,16 @@ def sentence_text(doc, sentence):
     return ' '.join(t.raw for t in doc.tokens[sentence.span]).replace('\t', ' ')
 
 class SentenceBOWOverlap(Comparator):
-    def __init__(self, threshold, length):
+    def __init__(self, threshold, length, idf_path=None):
         super(SentenceBOWOverlap, self).__init__(threshold)
         self.length = length
+        if idf_path:
+            self.idf = IDF(idf_path)
+        else:
+            self.idf = None
+
+    def __str__(self):
+        return '<{} t={} l={} idf={}>'.format(self.__class__.__name__, self.threshold, self.length, self.idf)
 
     def _handle(self, a, b):
         matches = []
@@ -121,10 +97,11 @@ class SentenceBOWOverlap(Comparator):
                     continue
                 if t.span.stop - t.span.start < self.length:
                     continue
-                score = overlap(a.features[s], b.features[t])
-                if score > self.threshold:
-                    matches.append(Match(sentence_id(a, s), sentence_id(b, t), score, 
-                                    '{}\t{}'.format(sentence_text(a, s), sentence_text(b, t))))
+                if s in a.features and t in b.features:
+                    score = self._score(a.features[s], b.features[t])
+                    if score > self.threshold:
+                        matches.append(Match(sentence_id(a, s), sentence_id(b, t), score, 
+                                        '{}\t{}'.format(sentence_text(a, s), sentence_text(b, t))))
         return matches
 
     def prime_features(self, doc):
@@ -133,5 +110,21 @@ class SentenceBOWOverlap(Comparator):
             for s in doc.sentences:
                 if s.span.stop - s.span.start < self.length:
                     continue
-                doc.features[s] = {i for i in {t.raw.lower() for t in doc.tokens[s.span]} 
-                                    if not is_punctuation(i)}
+                doc.features[s] = self._get_features(doc, s)
+        
+    def _get_features(self, doc, sentence):
+        return {i for i in {t.raw for t in doc.tokens[sentence.span]} if not is_punctuation(i) and not i.lower() in STOPWORDS}
+
+    def _score(self, a_features, b_features):
+        s = overlap(a_features, b_features)
+        if self.idf:
+            s *= sum(self.idf.get(t) for t in a_features.intersection(b_features))
+        return s
+
+class SentenceBOWCosine(SentenceBOWOverlap):
+    def _score(self, a_features, b_features):
+        return cosine_similarity(a_features, b_features)
+
+    def _get_features(self, doc, sentence):
+        return {i: self.idf.get(i) for i in {t.raw for t in doc.tokens[sentence.span]} 
+                                    if not is_punctuation(i) and not i.lower() in STOPWORDS}
