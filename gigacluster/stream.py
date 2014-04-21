@@ -24,6 +24,8 @@ class Stream(object):
         """
         last_date = None
         for fname in sorted(os.listdir(self.dirname)):
+            if not fname.endswith('.dr'):
+                continue
             with open(os.path.join(self.dirname, fname), 'rb') as f:
                 for date, docs in itertools.groupby(dr.Reader(f, Doc), lambda d: d.date_str):
                     if last_date and date < last_date:
