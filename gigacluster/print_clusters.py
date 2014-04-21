@@ -47,6 +47,7 @@ while more:
             print(' ', w, file=sys.stderr)
             for match in comparator(docs, w.iter_docs()):
                 print('{}\t{}'.format(date, match))
+            sys.stdout.flush()
     more = primary.seek()
     if end_date and date == end_date:
         break
