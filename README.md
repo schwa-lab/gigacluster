@@ -62,7 +62,7 @@ Clustering
 Clustering a month across all streams:
 ```bash
 time ./gigacluster/print_clusters.py \
-  -t 0.4 -m SentenceBOWOverlap -l 10
+  -t 0.4 -m SentenceBOWOverlap -l 10 \
   -p data/nyt/ -s data/apw/ \
   -s data/afp/ -s data/cna/ \
   -s data/wpb/ -s data/xin/
