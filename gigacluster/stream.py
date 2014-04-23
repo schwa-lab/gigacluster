@@ -12,8 +12,9 @@ class Stream(object):
     * Filenames should be sortable for temporal order.
     * Document order within files should be temporal.
     """
-    def __init__(self, dirname):
+    def __init__(self, dirname, filename_exp=None):
         self.dirname = dirname
+        self.filename_exp = filename_exp
 
     def __str__(self):
         return self.dirname
@@ -25,6 +26,8 @@ class Stream(object):
         last_date = None
         for fname in sorted(os.listdir(self.dirname)):
             if not fname.endswith('.dr'):
+                continue
+            if self.filename_exp and not self.filename_exp.match(fname):
                 continue
             with open(os.path.join(self.dirname, fname), 'rb') as f:
                 for date, docs in itertools.groupby(dr.Reader(f, Doc), lambda d: d.date_str):

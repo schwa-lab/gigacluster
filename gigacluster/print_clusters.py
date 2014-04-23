@@ -16,6 +16,7 @@ METRICS = {
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--primary')
 parser.add_argument('-s', '--streams', default=[], action='append')
+parser.add_argument('-S', '--stream-exp', help='RE to match stream filenames')
 parser.add_argument('-m', '--metric', default='SentenceBOWOverlap', help='Metric, available={}'.format(METRICS.keys()))
 parser.add_argument('-t', '--threshold', type=float, default=0.25)
 parser.add_argument('-l', '--length', type=int, default=1)
@@ -27,9 +28,10 @@ if args.end_date:
     end_date = datetime.datetime.strptime(args.end_date, '%Y%m%d').date()
 else:
     end_date = None
+filename_exp = re.compile(args.stream_exp) if args.stream_exp else None
 
-primary = Window(Stream(args.primary))
-secondaries = [Window(Stream(i), before=1, after=1) for i in args.streams]
+primary = Window(Stream(args.primary, filename_exp))
+secondaries = [Window(Stream(i, filename_exp), before=1, after=1) for i in args.streams]
 
 m = METRICS.get(args.metric)
 if m is None:
