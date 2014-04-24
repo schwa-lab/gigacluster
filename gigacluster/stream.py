@@ -3,7 +3,7 @@
 import datetime
 import itertools
 import os
-from model import dr, Doc
+from .model import dr, Doc
 
 class StreamError(Exception): pass
 

@@ -36,6 +36,7 @@ class Window(object):
             self._fill(start, end)
             return True
         else:
+            self._drop()
             return False
 
     def _calculate_date_bounds(self, date):
@@ -59,7 +60,7 @@ class Window(object):
                 self._push_front((d, docs))
                 start = date = d
                 for i in range(self.before):
-                    start =- DAY
+                    start -= DAY
                 end = date
                 for i in range(self.after):
                     end += DAY
@@ -75,10 +76,7 @@ class Window(object):
 
     def _fill(self, start, end):
         """ Fills buckets from the stream between start and end. """
-        # Drop unused buckets.
-        for d in list(self.dates.keys()):
-            if d < start:
-                del self.dates[d]
+        self._drop(start)
         # Fill from steam.
         while True:
             d, docs = self._next_item()
@@ -92,6 +90,12 @@ class Window(object):
             else: # ie: d > end
                 self._push_front((d, docs)) # Save for later.
                 break
+
+    def _drop(self, start=None):
+        """ Drop unused buckets. """
+        for d in list(self.dates.keys()):
+            if start is None or d < start:
+                del self.dates[d]
 
     def _next_item(self):
         """ Return the next item. """

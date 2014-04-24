@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 from collections import Counter
+import itertools
 import math
 import re
 import string
-from stopwords import STOPWORDS
+import sys
 
-from idf import IDF
-from model import dr, prev_next_sentences
+from .idf import IDF
+from .model import dr, prev_next_sentences
+from .stopwords import STOPWORDS
 
 class Match(object):
     def __init__(self, a, b, score, info):
@@ -69,15 +71,6 @@ def sentence_id(doc, sentence):
 def sentence_text(doc, sentence):
     return ' '.join(t.raw for t in doc.tokens[sentence.span]).replace('\t', ' ')
 
-def iter_pairs(a_items, b_items, hook):
-    for i, a in enumerate(a_items):
-        hook(a)
-        for j, b in enumerate(b_items):
-            if i == j:
-                break # Do not compare a,b; b,a.
-            hook(b)
-            yield a, b
-        
 def iter_long(sentences, length):
     for s in sentences:
         if s.span.stop - s.span.start > length:
@@ -101,9 +94,21 @@ class Comparator(object):
         self.stats = Counter()
 
     def __call__(self, docs_a, docs_b):
-        for a, b in iter_pairs(docs_a, docs_b, self.prime_features):
+        comparisons = 0
+        for i in docs_a:
+            self.prime_features(i)
+        for i in docs_b:
+            self.prime_features(i)
+        req_comparisons = len(docs_a) * len(docs_b)
+        step = req_comparisons // 10
+        print('{} comparisons'.format(req_comparisons), file=sys.stderr, end='')
+        for a, b in itertools.product(docs_a, docs_b):
+            if comparisons % step == 0:
+                print(' ...{}'.format(comparisons), file=sys.stderr, end='')
+            comparisons += 1
             for m in self._handle(a, b):
                 yield m
+        print('', file=sys.stderr)
 
     def _handle(self, a, b):
         raise NotImplementedError
@@ -112,9 +117,11 @@ class DocSentenceComparator(Comparator):
     def __init__(self, threshold, sentence_threshold, idf_path):
         super(DocSentenceComparator, self).__init__(threshold)
         self.idf = IDF(idf_path)
+        self.sentence_threshold = sentence_threshold
+        self.sentence_stats = Counter()
     
     def __str__(self):
-        return '<{} t={} idf={}>'.format(self.__class__.__name__, self.threshold, self.idf)
+        return '<{} t={} st={} idf={}>'.format(self.__class__.__name__, self.threshold, self.sentence_threshold, self.idf)
 
     def _handle(self, a, b):
         matches = []
@@ -126,15 +133,14 @@ class DocSentenceComparator(Comparator):
             #features.sort(reverse=True)
 
             # Check for sentence similarity.
-            # Perhaps some extra calls, but we don't know until this point whether we'll need to prime.
-            prime_sentence_features(a)
-            prime_sentence_features(b)
-            for i, j in iter_pairs(a.sentences, b.sentences, lambda i: i):
+            for i, j in itertools.product(a.sentences, b.sentences):
                 if not (i in a.sentence_features and j in b.sentence_features):
                     continue
                 a_f = a.sentence_features[i]
                 b_f = b.sentence_features[j]
                 card_intersection, card_union, card_a, card_b, sentence_score = overlap(set(a_f.keys()), set(b_f.keys()))
+                if not sentence_score or sentence_score < self.sentence_threshold:
+                    continue
                 dot_dict = {k: a_f[k] * b_f[k] for k in set(a_f.keys()).intersection(set(b_f.keys()))}
                 matches.append(SentenceMatch(sentence_id(a, i), sentence_id(b, j), 
                                 score=score, 
@@ -148,25 +154,27 @@ class DocSentenceComparator(Comparator):
                                 norm=norm(a_f) * norm(b_f),
                                 info='{}\t{}'.format(sentence_text(a, i), 
                                                     sentence_text(b, j))))
-        matches.sort(key=lambda m: m.sentence_score, reverse=True)
-        return matches[:5]
+                self.sentence_stats['{:.3f}'.format(sentence_score)] += 1
+        return matches
 
     def prime_features(self, doc):
         if not hasattr(doc, 'features'):
             doc.features = sq_tfidf_unigrams(doc, self.idf)
+            prime_sentence_features(doc)
 
     @property
-    def decile_quartile(self):
-        samples = list(self.iter_samples(self.stats))
+    def deciles(self):
+        return self._get_decile(self.stats), self._get_decile(self.sentence_stats)
+
+    def _get_decile(self, stats):
+        samples = list(self._iter_samples(stats))
         dec = len(samples) // 10
-        quart = len(samples) // 4
-        return samples[-dec:-dec + 1], samples[-quart:-quart + 1]
+        return samples[-dec:-dec + 1]
         
-    def iter_samples(self, stats):
+    def _iter_samples(self, stats):
         for i, count in sorted(stats.items()):
             for j in range(count):
                 yield i
-
 
 class SentenceBOWOverlap(Comparator):
     def __init__(self, threshold, length, idf_path=None):
@@ -184,7 +192,7 @@ class SentenceBOWOverlap(Comparator):
 
         
         matches = []
-        for s, t in iter_pairs(iter_long(a.sentences, self.length), iter_long(b.sentences, self.length), lambda i: i):
+        for s, t in itertools.product(iter_long(a.sentences, self.length), iter_long(b.sentences, self.length)):
             if s in a.sentence_features and t in b.sentence_features:
                 score = self._score(a.sentence_features[s], b.sentence_features[t])
                 if score > self.threshold:
@@ -198,7 +206,7 @@ class SentenceBOWOverlap(Comparator):
     def _score(self, a_f, b_f):
         card_intersection, card_union, card_a, card_b, sentence_score = overlap(a_f, b_f)
         if self.idf:
-            sentence_score *= sum(self.idf.get(t) for t in a_features.intersection(b_features))
+            sentence_score *= sum(self.idf.get(t) for t in a_f.intersection(b_f))
         return sentence_score
 
 class SentenceBOWCosine(SentenceBOWOverlap):

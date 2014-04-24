@@ -4,9 +4,9 @@ import argparse
 import datetime
 import sys
 
-from stream import Stream
-from window import Window
-from comparators import *
+from gigacluster.stream import Stream
+from gigacluster.window import Window
+from gigacluster.comparators import *
 
 METRICS = {
     'SentenceBOWOverlap': SentenceBOWOverlap,
@@ -19,7 +19,8 @@ parser.add_argument('-p', '--primary')
 parser.add_argument('-s', '--streams', default=[], action='append')
 parser.add_argument('-S', '--stream-exp', help='RE to match stream filenames')
 parser.add_argument('-m', '--metric', default='SentenceBOWOverlap', help='Metric, available={}'.format(METRICS.keys()))
-parser.add_argument('-t', '--threshold', type=float, default=0.25)
+parser.add_argument('-t', '--threshold', type=float, default=0.029)
+parser.add_argument('-T', '--sentence-threshold', type=float, default=0.125)
 parser.add_argument('-l', '--length', type=int, default=1)
 parser.add_argument('-i', '--idf-path')
 parser.add_argument('-e', '--end-date')
@@ -37,7 +38,7 @@ secondaries = [Window(Stream(i, filename_exp), before=1, after=1) for i in args.
 m = METRICS.get(args.metric)
 if m is None:
     parser.error('Require valid metric {}'.format(METRICS.keys()))
-comparator = m(args.threshold, args.threshold, idf_path=args.idf_path)
+comparator = m(args.threshold, args.sentence_threshold, idf_path=args.idf_path)
 #comparator = m(args.threshold, length=args.length, idf_path=args.idf_path)
 
 print(comparator, file=sys.stderr)
@@ -49,10 +50,12 @@ while more:
         for w in secondaries:
             w.seek(date)
             print(' ', w, file=sys.stderr)
-            for match in comparator(docs, w.iter_docs()):
+            for match in comparator(docs, list(w.iter_docs())):
                 print('{}\t{}'.format(date, match))
+            print('Distribution: score={}\tsentence_score{}'.format(*comparator.deciles), file=sys.stderr)
             sys.stdout.flush()
-        print('Distribution: {}\t{}'.format(*comparator.decile_quartile), file=sys.stderr)
+            sys.stderr.flush()
+
     more = primary.seek()
     if end_date and date == end_date:
         break
