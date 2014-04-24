@@ -95,7 +95,7 @@ def doc_id_to_basename(doc_id):
     return '{}_{}_{}'.format(source.lower(), lang.lower(), date[:6])
 
 class Doc(dr.Doc):
-    __slots__ = ['id', 'type', 'headline', 'dateline', 'tokens', 'sentences', 'paras', 'features']
+    __slots__ = ['id', 'type', 'headline', 'dateline', 'tokens', 'sentences', 'paras', 'features', 'sentence_features']
     id = dr.Text()
     type = dr.Text()
     headline = dr.Pointer(Sentence) # TODO turn into paragraph

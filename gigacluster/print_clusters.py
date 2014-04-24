@@ -11,6 +11,7 @@ from comparators import *
 METRICS = {
     'SentenceBOWOverlap': SentenceBOWOverlap,
     'SentenceBOWCosine': SentenceBOWCosine,
+    'DocSentenceComparator': DocSentenceComparator,
 }
 
 parser = argparse.ArgumentParser()
@@ -36,7 +37,8 @@ secondaries = [Window(Stream(i, filename_exp), before=1, after=1) for i in args.
 m = METRICS.get(args.metric)
 if m is None:
     parser.error('Require valid metric {}'.format(METRICS.keys()))
-comparator = m(args.threshold, length=args.length, idf_path=args.idf_path)
+comparator = m(args.threshold, args.threshold, idf_path=args.idf_path)
+#comparator = m(args.threshold, length=args.length, idf_path=args.idf_path)
 
 print(comparator, file=sys.stderr)
 
@@ -50,6 +52,7 @@ while more:
             for match in comparator(docs, w.iter_docs()):
                 print('{}\t{}'.format(date, match))
             sys.stdout.flush()
+        print('Distribution: {}\t{}'.format(*comparator.decile_quartile), file=sys.stderr)
     more = primary.seek()
     if end_date and date == end_date:
         break
