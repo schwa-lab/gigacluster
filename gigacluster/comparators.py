@@ -11,6 +11,8 @@ from .idf import IDF
 from .model import dr, prev_next_sentences
 from .stopwords import STOPWORDS
 
+from nltk.stem.porter import PorterStemmer as Stemmer
+
 class Match(object):
     def __init__(self, a, b, score, info):
         self.a = a
@@ -32,12 +34,39 @@ class SentenceMatch(Match):
         self.dot = dot
         self.idf_dot = idf_dot
         self.norm = norm
-    
+
     def __str__(self):
         return '{}\t{}\t{:.3f}\t{:.3f}\t{}\t{}\t{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{}'.format(
-            self.a, self.b, self.score, self.sentence_score, 
+            self.a, self.b, self.score, self.sentence_score,
             self.intersection, self.union, self.card_a, self.card_b,
             self.dot, self.idf_dot, self.norm, self.info)
+
+    @classmethod
+    def from_string(self, s):
+        a, b, score, sentence_score, intersection, union, card_a, card_b, dot, idf_dot, norm, info = s.rstrip('\n').split('\t', 11)
+        return self(a, b, float(score), float(sentence_score), int(intersection), int(union), int(card_a), int(card_b), float(dot), float(idf_dot), float(norm), info)
+
+def read_info(info):
+    return tuple(s.split() for s in info.split('\t'))
+
+STEMMER = Stemmer()
+def lemma_sequence(token_norms):
+    return [STEMMER.stem(i.lower()) for i in token_norms]
+
+NON_MATCH = 'N'
+MATCH = 'M'
+def iter_blocks(s, t, blocks):
+    i = j = 0
+    for block in blocks:
+        if block.size == 0:
+            continue
+        if block.a > i or block.b > j:
+            yield NON_MATCH, i, block.a, j, block.b
+        yield MATCH, block.a, block.a + block.size, block.b, block.b + block.size
+        i = block.a + block.size
+        j = block.b + block.size
+    if i != len(s) or j != len(t):
+        yield NON_MATCH, i, len(s), j, len(t)
 
 def overlap(a, b):
     i = len(a.intersection(b))
