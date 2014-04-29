@@ -4,7 +4,6 @@ from collections import Counter
 import itertools
 import math
 import re
-import string
 import sys
 
 from .idf import IDF
@@ -89,7 +88,7 @@ def norm(a):
     """ The Euclidean norm. """
     return math.sqrt(float(sum(v * v for v in a.values())))
 
-EXP = re.compile('[{}]+'.format(string.punctuation))
+EXP = re.compile('(_|[^\w\s])+', re.UNICODE)
 def is_punctuation(t):
     return EXP.match(t)
 
