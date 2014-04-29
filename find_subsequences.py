@@ -3,7 +3,7 @@
 from difflib import SequenceMatcher
 import sys
 
-from gigacluster import SentenceMatch, read_info, lemma_sequence, iter_blocks, is_punctuation, overlap, NON_MATCH
+from gigacluster import SentenceMatch, read_info, lemma_sequence, iter_blocks, is_punctuation, NON_MATCH
 
 '''
 <metadata>
@@ -33,7 +33,6 @@ def get_block_lines(s, t):
     for block_type, s_start, s_stop, t_start, t_stop in iter_blocks(s_lemmas, t_lemmas, matcher.get_matching_blocks()):
         s_slice = s_tokens[s_start:s_stop]
         t_slice = t_tokens[t_start:t_stop]
-        _, _, _, _, score = overlap(set(s_lemmas[s_start:s_stop]), set(t_lemmas[t_start:t_stop]))
         s_text = ' '.join(s_slice)
         t_text = ' '.join(t_slice)
         if block_type == NON_MATCH:
@@ -42,7 +41,7 @@ def get_block_lines(s, t):
             text = '{}\t{}'.format(s_text, t_text)
         else:
             text = s_text
-        lines.append('{}\t{:.3f}\t{}'.format(block_type, score, text))
+        lines.append('{}\t{}'.format(block_type, text))
     return lines
 
 matcher = SequenceMatcher(None)
