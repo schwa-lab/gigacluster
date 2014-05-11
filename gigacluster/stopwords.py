@@ -130,7 +130,8 @@ you
 your
 yours
 yourself
-yourselves"""
+yourselves
+"""
 STOPWORDS = set(s.strip() for s in english_stops.split('\n') if s.strip())
 DAYS = '''
 monday
@@ -168,5 +169,12 @@ nov.
 december
 dec.
 '''
+PTB_STOPS = """'s
+n't
+'ll
+'ve
+'d
+"""
 STOPWORDS.update({i for i in DAYS.strip().split()})
 STOPWORDS.update({i for i in MONTHS.strip().split()})
+STOPWORDS.update({i for i in PTB_STOPS.strip().split()})
