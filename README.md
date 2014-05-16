@@ -74,3 +74,23 @@ This takes sentences:
 * which overlap at more than 0.4
 
 There are also options to weight by IDF.
+
+Doc Sentence clustering
+=======================
+
+Generating the jobs
+```bash
+for i in afp apw cna wpb nyt xin; do for y in `seq 1994 2010`; do echo $i $y; done; done > jobs.txt
+```
+
+Running via `parallel`
+```bash
+cat jobs.txt | parallel -j 
+parallel -j 10 ./cluster_year.sh /data1/gigacluster/clustering-0.4-0.4/ {}
+```
+
+
+
+
+
+
