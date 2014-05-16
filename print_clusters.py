@@ -33,7 +33,7 @@ else:
 filename_exp = re.compile(args.stream_exp) if args.stream_exp else None
 
 primary = Window(Stream(args.primary, filename_exp))
-secondaries = [Window(Stream(i, filename_exp), before=1, after=1) for i in args.streams]
+secondaries = [Window(Stream(i, filename_exp), before=1, after=1) for i in args.streams if i.rstrip('/') != args.primary.rstrip('/')]
 
 m = METRICS.get(args.metric)
 if m is None:
@@ -42,6 +42,9 @@ comparator = m(args.threshold, args.sentence_threshold, idf_path=args.idf_path)
 #comparator = m(args.threshold, length=args.length, idf_path=args.idf_path)
 
 print(comparator, file=sys.stderr)
+print(primary, file=sys.stderr)
+for s in secondaries:
+    print('\t' + str(s), file=sys.stderr)
 
 more = primary.seek()
 while more:

@@ -3,6 +3,7 @@
 import datetime
 import itertools
 import os
+import sys
 from .model import dr, Doc
 
 class StreamError(Exception): pass
@@ -28,6 +29,7 @@ class Stream(object):
             if not fname.endswith('.dr'):
                 continue
             if self.filename_exp and not self.filename_exp.match(fname):
+                print('Rejecting {} as it does not match pattern {}'.format(fname, self.filename_exp, file=sys.stderr))
                 continue
             with open(os.path.join(self.dirname, fname), 'rb') as f:
                 for date, docs in itertools.groupby(dr.Reader(f, Doc), lambda d: d.date_str):
