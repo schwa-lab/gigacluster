@@ -104,7 +104,7 @@ def sentence_id(doc, sentence):
     return '{}/{}'.format(doc.id, sentence.index)
 
 def sentence_text(doc, sentence):
-    return ' '.join(t.norm for t in doc.tokens[sentence.span]).replace('\t', ' ')
+    return ' '.join(t.text for t in doc.tokens[sentence.span]).replace('\t', ' ')
 
 def iter_long(sentences, length):
     for s in sentences:
@@ -112,8 +112,8 @@ def iter_long(sentences, length):
             yield s
 
 def unigram_tf(doc, span):
-    return Counter(t.norm for t in doc.tokens[span] 
-            if not is_punctuation(t.norm) and not t.norm.lower() in STOPWORDS)
+    return Counter(t.text for t in doc.tokens[span] 
+            if not is_punctuation(t.text) and not t.text.lower() in STOPWORDS)
 
 def sq_tfidf_unigrams(doc, idf):
     return {t: math.sqrt(tf) * idf.get(t) for t, tf in unigram_tf(doc, slice(0, len(doc.tokens) + 1)).items()}
@@ -192,9 +192,10 @@ class DocSentenceComparator(Comparator):
                                             a_f, b_f,
                                             self.idf, self.sentence_threshold)
                 if match is not None:
-                    match.info = '{}\t{}'.format(sentence_text(doc, a),
-                                                 sentence_text(doc, b))
+                    match.info = '{}\t{}'.format(sentence_text(a, i),
+                                                 sentence_text(b, j))
                     self.sentence_stats['{:.3f}'.format(match.sentence_score)] += 1
+                    matches.append(match)
         return matches
 
     def prime_features(self, doc):

@@ -43,6 +43,10 @@ class Token(dr.Ann):
                 break
             yield t
 
+    @property
+    def text(self):
+        return self.norm or self.raw
+
     def __cmp__(self, other):
         return cmp(self.index, other.index)
 
