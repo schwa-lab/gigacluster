@@ -42,7 +42,7 @@ class SentenceMatch(Match):
         self.norm = norm
 
     def __str__(self):
-        return u'{}\t{}\t{:.3f}\t{:.3f}\t{}\t{}\t{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{}'.format(
+        return u'SentenceMatch\t{}\t{}\t{:.3f}\t{:.3f}\t{}\t{}\t{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{}'.format(
             self.a, self.b, self.score, self.sentence_score,
             self.intersection, self.union, self.card_a, self.card_b,
             self.dot, self.idf_dot, self.norm, self.info)
@@ -138,7 +138,7 @@ class Comparator(object):
         step = req_comparisons // 10
         print('{} comparisons'.format(req_comparisons), file=sys.stderr, end='')
         for a, b in itertools.product(docs_a, docs_b):
-            if comparisons % step == 0:
+            if step and comparisons % step == 0:
                 print(' ...{}'.format(comparisons), file=sys.stderr, end='')
             comparisons += 1
             for m in self._handle(a, b):

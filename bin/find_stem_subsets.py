@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import division, print_function
 from difflib import SequenceMatcher
 import sys
+import unicode
 
-from gigacluster import SentenceMatch, read_info, lemma_sequence, iter_blocks, is_punctuation, NON_MATCH, STOPWORDS
+from gigacluster import SentenceMatch, read_info, is_punctuation, STOPWORDS
 import nltk
 stem = nltk.stem.PorterStemmer().stem
 

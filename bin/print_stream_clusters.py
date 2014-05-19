@@ -2,11 +2,10 @@
 
 import argparse
 import datetime
+import os
 import sys
 
-from gigacluster.stream import Stream
-from gigacluster.window import Window
-from gigacluster.comparators import *
+from gigacluster import SentenceBOWOverlap, SentenceBOWCosine, DocSentenceComparator, Stream, Window, DATA
 
 METRICS = {
     'SentenceBOWOverlap': SentenceBOWOverlap,
@@ -18,11 +17,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--primary')
 parser.add_argument('-s', '--streams', default=[], action='append')
 parser.add_argument('-S', '--stream-exp', help='RE to match stream filenames')
-parser.add_argument('-m', '--metric', default='SentenceBOWOverlap', help='Metric, available={}'.format(METRICS.keys()))
-parser.add_argument('-t', '--threshold', type=float, default=0.029)
-parser.add_argument('-T', '--sentence-threshold', type=float, default=0.125)
+parser.add_argument('-m', '--metric', default='DocSentenceComparator', help='Metric, available={}'.format(METRICS.keys()))
+parser.add_argument('-t', '--threshold', type=float, default=0.4)
+parser.add_argument('-T', '--sentence-threshold', type=float, default=0.4)
 parser.add_argument('-l', '--length', type=int, default=1)
-parser.add_argument('-i', '--idf-path')
+parser.add_argument('-i', '--idf-path', default=os.path.join(DATA, 'idf.txt'))
 parser.add_argument('-e', '--end-date')
 args = parser.parse_args()
 

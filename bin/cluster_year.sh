@@ -11,7 +11,7 @@ PREFIX=$DIR/$YEAR.p$PRIMARY.t$DOC_T.T$SEN_T
 #echo $PREFIX
 #echo $PRIMARY
 #echo $YEAR
-./print_clusters.py -p data/$PRIMARY \
+./bin/print_clusters.py -p data/$PRIMARY \
     -s data/apw/ -s data/afp/ -s data/cna/ \
     -s data/wpb/ -s data/xin/ -s data/nyt/ \
     -i data/idf.txt \
