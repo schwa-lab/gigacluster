@@ -49,8 +49,12 @@ class SentenceMatch(Match):
 
     @classmethod
     def from_string(self, s):
-        a, b, score, sentence_score, intersection, union, card_a, card_b, dot, idf_dot, norm, info = s.rstrip('\n').split('\t', 11)
-        return self(a, b, float(score), float(sentence_score), int(intersection), int(union), int(card_a), int(card_b), float(dot), float(idf_dot), float(norm), info)
+        try:
+            a, b, score, sentence_score, intersection, union, card_a, card_b, dot, idf_dot, norm, info = s.rstrip('\n').split('\t', 11)
+            return self(a, b, float(score), float(sentence_score), int(intersection), int(union), int(card_a), int(card_b), float(dot), float(idf_dot), float(norm), info)
+        except ValueError:
+            _, a, b, score, sentence_score, intersection, union, card_a, card_b, dot, idf_dot, norm, info = s.rstrip('\n').split('\t', 12)
+            return self(a, b, float(score), float(sentence_score), int(intersection), int(union), int(card_a), int(card_b), float(dot), float(idf_dot), float(norm), info)
 
 def read_info(info):
     return tuple(s.split() for s in info.split('\t'))

@@ -1,12 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import hashlib
 import json
 import os
 import sys
-
-from model import Doc, dr
-from tokenizer import Tokenizer
+print(sys.path)
+from gigacluster import Doc, dr, Tokenizer
 
 tok = Tokenizer()
 for root, dirs, files in os.walk(sys.argv[1]):
