@@ -3,6 +3,7 @@
 import argparse
 import datetime
 import os
+import re
 import sys
 
 from gigacluster import SentenceBOWOverlap, SentenceBOWCosine, DocSentenceComparator, Stream, Window, DATA
