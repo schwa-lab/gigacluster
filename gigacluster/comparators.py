@@ -140,14 +140,16 @@ class Comparator(object):
             self.prime_features(i)
         req_comparisons = len(docs_a) * len(docs_b)
         step = req_comparisons // 10
-        print('{} comparisons'.format(req_comparisons), file=sys.stderr, end='')
+        #print('{} comparisons'.format(req_comparisons), file=sys.stderr, end='')
         for a, b in itertools.product(docs_a, docs_b):
+            '''
             if step and comparisons % step == 0:
                 print(' ...{}'.format(comparisons), file=sys.stderr, end='')
+            '''
             comparisons += 1
             for m in self._handle(a, b):
                 yield m
-        print('', file=sys.stderr)
+        #print('', file=sys.stderr)
 
     def _handle(self, a, b):
         raise NotImplementedError
