@@ -11,7 +11,8 @@ setup(
   install_requires=[
       'libschwa-python',
       'nose',
-      'scikit-learn',
+      'beautifulsoup4',
+      'requests',
   ],
   setup_requires=[
     'setuptools_git >= 0.3',
