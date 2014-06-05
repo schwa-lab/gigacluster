@@ -14,8 +14,4 @@ setup(
       'beautifulsoup4',
       'requests',
   ],
-  setup_requires=[
-    'setuptools_git >= 0.3',
-  ],
-  include_package_data=True,
 )
