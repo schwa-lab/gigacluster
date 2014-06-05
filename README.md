@@ -20,7 +20,36 @@ Schwalab servers
 ----------------
 
 ```bash
-CC=gcc CXX=g++ ve/bin/python3.4 -m pip install -e ../libschwa-python
+~repos/virtualenv/virtualenv.py -p python3.4 ve
+source ve/bin/activate
+easy_install-3.4 /path/to/pip-1.2.1.tar.gz
+pip install -e ~/repos/nltk
+CC=gcc CXX=g++ ve/bin/python3.4 -m pip install libschwa-python
+pip install -e .
+```
+
+Configuration
+=============
+
+Setting a Readability API key
+-----------------------------
+
+Change `ve/bin/activate` to include a line like:
+```
+export READABILITY_API_TOKEN=<hash>
+```
+
+Change symlinks
+---------------
+
+Change `data` and `cache` to point somewhere you wish to store the data.
+
+Change cronjob dir
+------------------
+
+Change the following in `bin/gn_cron.sh` to where you checked out the code.
+```
+cd /data1/gigacluster/gigacluster
 ```
 
 Data Preparation
