@@ -6,7 +6,7 @@ import glob
 import json
 import os
 
-CACHE = 'cache'
+from gigacluster import CACHE
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--detail')
@@ -16,10 +16,13 @@ clusters = []
 readable_clusters = []
 incomplete = 0
 for cluster_id in os.listdir(CACHE):
+    path = os.path.join(CACHE, cluster_id)
+    if not os.path.isdir(path):
+        continue
     tokens = Counter()
     n_sources = 0
     n_readable = 0
-    for filename in os.listdir(os.path.join(CACHE, cluster_id)):
+    for filename in os.listdir(path):
         if filename.endswith('.url'):
             n_sources += 1
         elif filename.endswith('.readability'):

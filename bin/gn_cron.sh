@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "[gigacluster] indexing on $(hostname)"
 date
+umask 0002
 cd /data1/gigacluster/gigacluster
 source ve/bin/activate
 ./bin/fetch_gn_clusters.py
